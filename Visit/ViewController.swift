@@ -39,9 +39,15 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         setupLocation()
         setupNotifications()
-        
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        showCurrentLocation()
+    }
+    
+    func showCurrentLocation() {
         if let userLocation = locationManager.location?.coordinate {
-            let viewRegion = MKCoordinateRegion(center: userLocation, latitudinalMeters: 200, longitudinalMeters: 200)
+            let viewRegion = MKCoordinateRegion(center: userLocation, latitudinalMeters: 400, longitudinalMeters: 400)
             mapView.setRegion(viewRegion, animated: true)
         }
     }
@@ -72,15 +78,6 @@ extension ViewController: CLLocationManagerDelegate {
         findNearybSupermarket(visitCoordinate:visit.coordinate)
     }
     
-    func sendVisitNotification(title:String, body:String) {
-        let content = UNMutableNotificationContent()
-        content.title = title
-        content.body = body
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
-        let request = UNNotificationRequest(identifier: "SupermarketNearby", content: content, trigger: trigger)
-        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
-    }
-    
     func findNearybSupermarket(visitCoordinate:CLLocationCoordinate2D) {
         print("Find near \(visitCoordinate)")
         let radiusInMeters = 100.0
@@ -98,7 +95,7 @@ extension ViewController: CLLocationManagerDelegate {
                 var results = [LocationResult]()
                 for item in items {
                     let distance = item.placemark.coordinate.distanceTo(otherLocation: visitCoordinate)
-                    let result = LocationResult(title: item.name ?? "No Title", distance: distance, isCurrentLocation: item.isCurrentLocation)
+                    let result = LocationResult(title: item.name ?? "No Title", distance: distance, isCurrentLocation: item.isCurrentLocation, latitude: item.placemark.coordinate.latitude, longitude: item.placemark.coordinate.longitude)
                     results.append(result)
                 }
                 results.sort(by: { (resultA, resultB) -> Bool in
@@ -110,14 +107,33 @@ extension ViewController: CLLocationManagerDelegate {
                     var body = ""
                     body.append(firstResult.distance.distanceString())
                     if firstResult.isCurrentLocation {
-                        body.append("📍")
+                        body.append("📍HERE ")
                     }
-                    self.sendVisitNotification(title: firstResult.title, body: body)
+                    self.sendVisitNotification(title: firstResult.title, body: body, isCurrentLocation: firstResult.isCurrentLocation)
+                    self.addAnnotation(coordinate: firstResult.locationCoordinate(), title: firstResult.title)
                 }
             } else {
               print("No Results")
             }
         }
+    }
+    
+    func sendVisitNotification(title:String, body:String, isCurrentLocation:Bool) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+    
+        let request = UNNotificationRequest(identifier: "SupermarketNearby", content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
+    }
+    
+    func addAnnotation(coordinate:CLLocationCoordinate2D, title:String) {
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = coordinate
+        annotation.title = title
+        self.mapView.addAnnotation(annotation)
     }
 }
 
@@ -125,6 +141,11 @@ struct LocationResult {
     let title:String
     let distance:Double
     let isCurrentLocation:Bool
+    let latitude:Double
+    let longitude:Double
+    func locationCoordinate()->CLLocationCoordinate2D {
+        return CLLocationCoordinate2DMake(latitude, longitude)
+    }
 }
 
 extension Double {
