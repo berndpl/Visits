@@ -11,12 +11,24 @@ import CoreLocation
 import UserNotifications
 import MapKit
 
+struct LocationResult {
+    let title:String
+    let distance:Double
+    let isCurrentLocation:Bool
+    let latitude:Double
+    let longitude:Double
+    func locationCoordinate()->CLLocationCoordinate2D {
+        return CLLocationCoordinate2DMake(latitude, longitude)
+    }
+}
+
 class ViewController: UIViewController {
     
     var locationManager:CLLocationManager = CLLocationManager()
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var visitsSwitch: UISwitch!
     
+    @IBOutlet weak var visitsSwitchEffectView: UIVisualEffectView!
     @IBAction func didTapVisitsSwitch(_ sender: UISwitch) {
         if sender.isOn {
             locationManager.startMonitoringVisits()
@@ -39,6 +51,8 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         setupLocation()
         setupNotifications()
+        visitsSwitchEffectView.layer.cornerRadius = visitsSwitchEffectView.bounds.height / 2.0
+        visitsSwitchEffectView.layer.masksToBounds = true
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -139,17 +153,6 @@ extension ViewController: CLLocationManagerDelegate {
         annotation.title = title
         self.mapView.addAnnotation(annotation)
         self.mapView.showAnnotations([annotation], animated: true)
-    }
-}
-
-struct LocationResult {
-    let title:String
-    let distance:Double
-    let isCurrentLocation:Bool
-    let latitude:Double
-    let longitude:Double
-    func locationCoordinate()->CLLocationCoordinate2D {
-        return CLLocationCoordinate2DMake(latitude, longitude)
     }
 }
 
