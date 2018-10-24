@@ -12,9 +12,11 @@ import UserNotifications
 import MapKit
 
 class ViewController: UIViewController {
-    @IBOutlet weak var mapView: MKMapView!
     
+    var locationManager:CLLocationManager = CLLocationManager()
+    @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var visitsSwitch: UISwitch!
+    
     @IBAction func didTapVisitsSwitch(_ sender: UISwitch) {
         if sender.isOn {
             locationManager.startMonitoringVisits()
@@ -32,8 +34,6 @@ class ViewController: UIViewController {
         }
         findNearybSupermarket(visitCoordinate: location.coordinate)
     }
-    
-    var locationManager:CLLocationManager = CLLocationManager()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -103,14 +103,9 @@ extension ViewController: CLLocationManagerDelegate {
                 })
                 print("Results \(results.count)")
                 
-                if let firstResult = results.first {
-                    var body = ""
-                    body.append(firstResult.distance.distanceString())
-                    if firstResult.isCurrentLocation {
-                        body.append("📍HERE ")
-                    }
-                    self.sendVisitNotification(title: firstResult.title, body: body, isCurrentLocation: firstResult.isCurrentLocation)
-                    self.addAnnotation(coordinate: firstResult.locationCoordinate(), title: firstResult.title)
+                if let firstLocationResult = results.first {
+                    self.sendVisitNotification(location: firstLocationResult)
+                    self.addAnnotation(coordinate: firstLocationResult.locationCoordinate(), title: firstLocationResult.title)
                 }
             } else {
               print("No Results")
@@ -118,10 +113,19 @@ extension ViewController: CLLocationManagerDelegate {
         }
     }
     
-    func sendVisitNotification(title:String, body:String, isCurrentLocation:Bool) {
+    func sendVisitNotification(location:LocationResult) {
         let content = UNMutableNotificationContent()
-        content.title = title
+        
+        var body = ""
+        body.append(location.distance.distanceString())
+        if location.isCurrentLocation {
+            body.append("📍HERE ")
+        }
+        
+        content.title = location.title
         content.body = body
+        content.categoryIdentifier = "visitCategory"
+        content.userInfo = ["latitude":location.latitude, "longitude":location.longitude]
         
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
     
@@ -134,6 +138,7 @@ extension ViewController: CLLocationManagerDelegate {
         annotation.coordinate = coordinate
         annotation.title = title
         self.mapView.addAnnotation(annotation)
+        self.mapView.showAnnotations([annotation], animated: true)
     }
 }
 
