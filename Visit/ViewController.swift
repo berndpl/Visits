@@ -89,6 +89,7 @@ extension ViewController: CLLocationManagerDelegate {
     
     func locationManager(_ manager: CLLocationManager, didVisit visit: CLVisit) {
         print("Did Visit")
+        sendVisitNotification()
         findNearybSupermarket(visitCoordinate:visit.coordinate)
     }
     
@@ -111,15 +112,26 @@ extension ViewController: CLLocationManagerDelegate {
                     let distance = item.placemark.coordinate.distanceTo(otherLocation: visitCoordinate)
                     let result = LocationResult(title: item.name ?? "No Title", distance: distance, isCurrentLocation: item.isCurrentLocation, latitude: item.placemark.coordinate.latitude, longitude: item.placemark.coordinate.longitude)
                     results.append(result)
+                    if item.isCurrentLocation {
+                        let title = "📍 CURRENT "+(item.name ?? "no name")
+                        self.sendVisitNotification(location: result, title:title, body: result.distance.distanceString(), identifier: "currentLocation", interval: 0.5)
+                        self.addAnnotation(coordinate: result.locationCoordinate(), title: "📍 IS CURRENT "+result.title)
+                    }
                 }
                 results.sort(by: { (resultA, resultB) -> Bool in
                     return resultA.distance < resultB.distance
                 })
+
+                results.sort(by: { (resultA, resultB) -> Bool in
+                    return resultA.isCurrentLocation
+                })
+                
                 print("Results \(results.count)")
                 
                 if let firstLocationResult = results.first {
-                    self.sendVisitNotification(location: firstLocationResult)
-                    self.addAnnotation(coordinate: firstLocationResult.locationCoordinate(), title: firstLocationResult.title)
+                    let title = "NEARBY "+firstLocationResult.title
+                    self.sendVisitNotification(location: firstLocationResult, title: title, body: firstLocationResult.distance.distanceString(), identifier: "nearbySupermarket", interval: 2)
+                    self.addAnnotation(coordinate: firstLocationResult.locationCoordinate(), title: title)
                 }
             } else {
               print("No Results")
@@ -127,23 +139,26 @@ extension ViewController: CLLocationManagerDelegate {
         }
     }
     
-    func sendVisitNotification(location:LocationResult) {
+    func sendVisitNotification() {
         let content = UNMutableNotificationContent()
-        
-        var body = ""
-        body.append(location.distance.distanceString())
-        if location.isCurrentLocation {
-            body.append("📍HERE ")
-        }
-        
-        content.title = location.title
+        content.title = "Vist"
+        content.body = "Here"
+        content.categoryIdentifier = "visitWithMap"
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.1, repeats: false)
+        let request = UNNotificationRequest(identifier: "visitDetected", content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
+    }
+    
+    func sendVisitNotification(location:LocationResult, title:String, body:String, identifier:String, interval:TimeInterval) {
+        let content = UNMutableNotificationContent()
+        content.title = title
         content.body = body
-        content.categoryIdentifier = "visitCategory"
+        content.categoryIdentifier = "visitWithMap"
         content.userInfo = ["latitude":location.latitude, "longitude":location.longitude]
         
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false)
     
-        let request = UNNotificationRequest(identifier: "SupermarketNearby", content: content, trigger: trigger)
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
         UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
     }
     
