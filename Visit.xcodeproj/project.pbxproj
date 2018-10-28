@@ -12,6 +12,11 @@
 		89164E892180F36A0074E4BC /* NotificationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89164E882180F36A0074E4BC /* NotificationViewController.swift */; };
 		89164E8C2180F36A0074E4BC /* MainInterface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 89164E8A2180F36A0074E4BC /* MainInterface.storyboard */; };
 		89164E902180F36A0074E4BC /* VisitNotification.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 89164E812180F36A0074E4BC /* VisitNotification.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		896EA6E32183A6CE00A0AF04 /* Visit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 896EA6E22183A6CE00A0AF04 /* Visit.swift */; };
+		896EA6E72183AF4500A0AF04 /* VisitTableCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 896EA6E52183AF4500A0AF04 /* VisitTableCell.swift */; };
+		896EA6E82183AF4500A0AF04 /* VisitsTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 896EA6E62183AF4500A0AF04 /* VisitsTable.swift */; };
+		896EA6EA2184683300A0AF04 /* RoundedVisualEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 896EA6E92184683300A0AF04 /* RoundedVisualEffectView.swift */; };
+		896EA6EB21846BEC00A0AF04 /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 896EA6DE2183A1BC00A0AF04 /* Storage.swift */; };
 		89B34A00217F6BB200DD0B2E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89B349FF217F6BB200DD0B2E /* AppDelegate.swift */; };
 		89B34A02217F6BB200DD0B2E /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89B34A01217F6BB200DD0B2E /* ViewController.swift */; };
 		89B34A05217F6BB200DD0B2E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 89B34A03217F6BB200DD0B2E /* Main.storyboard */; };
@@ -50,6 +55,12 @@
 		89164E882180F36A0074E4BC /* NotificationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationViewController.swift; sourceTree = "<group>"; };
 		89164E8B2180F36A0074E4BC /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainInterface.storyboard; sourceTree = "<group>"; };
 		89164E8D2180F36A0074E4BC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		896EA6DE2183A1BC00A0AF04 /* Storage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
+		896EA6E22183A6CE00A0AF04 /* Visit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Visit.swift; sourceTree = "<group>"; };
+		896EA6E52183AF4500A0AF04 /* VisitTableCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VisitTableCell.swift; sourceTree = "<group>"; };
+		896EA6E62183AF4500A0AF04 /* VisitsTable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VisitsTable.swift; sourceTree = "<group>"; };
+		896EA6E92184683300A0AF04 /* RoundedVisualEffectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundedVisualEffectView.swift; sourceTree = "<group>"; };
+		896EA6EC21846C2100A0AF04 /* Visit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Visit.entitlements; sourceTree = "<group>"; };
 		89B349FC217F6BB200DD0B2E /* Visit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Visit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		89B349FF217F6BB200DD0B2E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		89B34A01217F6BB200DD0B2E /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -98,6 +109,17 @@
 			path = VisitNotification;
 			sourceTree = "<group>";
 		};
+		896EA6E42183A91600A0AF04 /* Storage */ = {
+			isa = PBXGroup;
+			children = (
+				896EA6E62183AF4500A0AF04 /* VisitsTable.swift */,
+				896EA6E52183AF4500A0AF04 /* VisitTableCell.swift */,
+				896EA6DE2183A1BC00A0AF04 /* Storage.swift */,
+				896EA6E22183A6CE00A0AF04 /* Visit.swift */,
+			);
+			path = Storage;
+			sourceTree = "<group>";
+		};
 		89B349F3217F6BB200DD0B2E = {
 			isa = PBXGroup;
 			children = (
@@ -120,8 +142,11 @@
 		89B349FE217F6BB200DD0B2E /* Visit */ = {
 			isa = PBXGroup;
 			children = (
+				896EA6EC21846C2100A0AF04 /* Visit.entitlements */,
 				89B349FF217F6BB200DD0B2E /* AppDelegate.swift */,
 				89B34A01217F6BB200DD0B2E /* ViewController.swift */,
+				896EA6E92184683300A0AF04 /* RoundedVisualEffectView.swift */,
+				896EA6E42183A91600A0AF04 /* Storage */,
 				89B34A03217F6BB200DD0B2E /* Main.storyboard */,
 				89B34A06217F6BB300DD0B2E /* Assets.xcassets */,
 				89B34A08217F6BB300DD0B2E /* LaunchScreen.storyboard */,
@@ -184,6 +209,11 @@
 					};
 					89B349FB217F6BB200DD0B2E = {
 						CreatedOnToolsVersion = 10.0;
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
@@ -240,8 +270,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				896EA6E32183A6CE00A0AF04 /* Visit.swift in Sources */,
+				896EA6EB21846BEC00A0AF04 /* Storage.swift in Sources */,
+				896EA6E72183AF4500A0AF04 /* VisitTableCell.swift in Sources */,
+				896EA6E82183AF4500A0AF04 /* VisitsTable.swift in Sources */,
 				89B34A02217F6BB200DD0B2E /* ViewController.swift in Sources */,
 				89B34A00217F6BB200DD0B2E /* AppDelegate.swift in Sources */,
+				896EA6EA2184683300A0AF04 /* RoundedVisualEffectView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -442,6 +477,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Visit/Visit.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = DNKZNVGEK5;
 				INFOPLIST_FILE = Visit/Info.plist;
@@ -461,6 +497,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Visit/Visit.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = DNKZNVGEK5;
 				INFOPLIST_FILE = Visit/Info.plist;

@@ -11,24 +11,43 @@ import CoreLocation
 import UserNotifications
 import MapKit
 
-struct LocationResult {
-    let title:String
-    let distance:Double
-    let isCurrentLocation:Bool
-    let latitude:Double
-    let longitude:Double
-    func locationCoordinate()->CLLocationCoordinate2D {
-        return CLLocationCoordinate2DMake(latitude, longitude)
-    }
-}
-
 class ViewController: UIViewController {
     
     var locationManager:CLLocationManager = CLLocationManager()
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var visitsSwitch: UISwitch!
+    @IBOutlet weak var historyButton: UIButton!
     
-    @IBOutlet weak var visitsSwitchEffectView: UIVisualEffectView!
+    var visits = [Visit]() {
+        didSet{
+            self.historyButton.setTitle("\(visits.count)", for: UIControl.State.normal)
+            Storage.save(state: visits)
+        }
+    }
+    
+    func restoreVisits() {
+        visits = Storage.load() ?? [Visit]()
+    }
+    
+    func addVisit(visit:Visit) {
+        visits.insert(visit, at: 0)
+        //visits.append(visit)
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "showHistory" {
+            let visitsTableViewController = segue.destination as! VisitsTable
+            visitsTableViewController.visits = self.visits
+        }
+    }
+    
+    @IBAction func unwindToMap(_ unwindSegue: UIStoryboardSegue) {
+        //let sourceViewController = unwindSegue.source
+        print("unwind")
+        restoreVisits()
+        // Use data from the view controller which initiated the unwind segue
+    }
+    
     @IBAction func didTapVisitsSwitch(_ sender: UISwitch) {
         if sender.isOn {
             locationManager.startMonitoringVisits()
@@ -44,19 +63,28 @@ class ViewController: UIViewController {
             print("No location")
             return
         }
-        findNearybSupermarket(visitCoordinate: location.coordinate)
+        findNearybSupermarket(visitCoordinate:location.coordinate, completion: {(visit) in
+            self.sendVisitNotification(visit: visit, identifier: "nearbySupermarket\(Date())", interval: 1)
+            self.addAnnotation(coordinate: visit.locationCoordinate(), title: visit.title)
+        })
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupLocation()
         setupNotifications()
-        visitsSwitchEffectView.layer.cornerRadius = visitsSwitchEffectView.bounds.height / 2.0
-        visitsSwitchEffectView.layer.masksToBounds = true
+        showCurrentLocation()
+        restoreVisits()
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        showCurrentLocation()
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        self.navigationController?.setNavigationBarHidden(false, animated: animated)
     }
     
     func showCurrentLocation() {
@@ -68,9 +96,7 @@ class ViewController: UIViewController {
     
     func setupNotifications() {
         let center = UNUserNotificationCenter.current()
-        center.requestAuthorization(options: [.badge, .sound, .alert]) { (granted, error) in
-            print ("granted \(granted)")
-        }
+        center.requestAuthorization(options: [.badge, .sound, .alert]) { (granted, error) in print ("granted \(granted)") }
         UNUserNotificationCenter.current().delegate = self
     }
     
@@ -88,12 +114,19 @@ class ViewController: UIViewController {
 extension ViewController: CLLocationManagerDelegate {
     
     func locationManager(_ manager: CLLocationManager, didVisit visit: CLVisit) {
-        print("Did Visit")
+        print("Did Visit \(visit.arrivalDate) \(visit.departureDate)")
         sendVisitNotification()
-        findNearybSupermarket(visitCoordinate:visit.coordinate)
+        if visit.departureDate == NSDate.distantFuture {
+            // arrived, not yet left
+            findNearybSupermarket(visitCoordinate:visit.coordinate, completion: {(visit) in
+                self.sendVisitNotification(visit: visit, identifier: "nearbySupermarket\(Date())", interval: 1)
+                self.addAnnotation(coordinate: visit.locationCoordinate(), title: visit.title)
+                self.addVisit(visit: visit)
+            })
+        }
     }
     
-    func findNearybSupermarket(visitCoordinate:CLLocationCoordinate2D) {
+    func findNearybSupermarket(visitCoordinate:CLLocationCoordinate2D, completion: @escaping (Visit) -> Void) {
         print("Find near \(visitCoordinate)")
         let radiusInMeters = 100.0
         let query:String = "supermarket"
@@ -107,31 +140,30 @@ extension ViewController: CLLocationManagerDelegate {
         
         search.start { (response:MKLocalSearch.Response?, error:Error?) in
             if let items = response?.mapItems {
-                var results = [LocationResult]()
+                var results = [Visit]()
                 for item in items {
+                    var title = item.name ?? "No Title"
                     let distance = item.placemark.coordinate.distanceTo(otherLocation: visitCoordinate)
-                    let result = LocationResult(title: item.name ?? "No Title", distance: distance, isCurrentLocation: item.isCurrentLocation, latitude: item.placemark.coordinate.latitude, longitude: item.placemark.coordinate.longitude)
-                    results.append(result)
-                    if item.isCurrentLocation {
-                        let title = "📍 CURRENT "+(item.name ?? "no name")
-                        self.sendVisitNotification(location: result, title:title, body: result.distance.distanceString(), identifier: "currentLocation", interval: 0.5)
-                        self.addAnnotation(coordinate: result.locationCoordinate(), title: "📍 IS CURRENT "+result.title)
+                    let inferredIsCurrentLocation = distance < 90.0 ? true : false
+                    let systemIsCurrentLocation = item.isCurrentLocation
+                    title = inferredIsCurrentLocation == true ? "📍\(title)" : title
+                    if systemIsCurrentLocation == true {
+                        title = "\(title) IS SYSTEM CURRENT"
                     }
+                    let visitResult = Visit(title: title, distance: distance, isCurrentLocation: inferredIsCurrentLocation, latitude: item.placemark.coordinate.latitude, longitude: item.placemark.coordinate.longitude)
+                    results.append(visitResult)
                 }
+                
                 results.sort(by: { (resultA, resultB) -> Bool in
                     return resultA.distance < resultB.distance
                 })
-
                 results.sort(by: { (resultA, resultB) -> Bool in
                     return resultA.isCurrentLocation
                 })
                 
-                print("Results \(results.count)")
-                
+                print("Results \(results)")
                 if let firstLocationResult = results.first {
-                    let title = "NEARBY "+firstLocationResult.title
-                    self.sendVisitNotification(location: firstLocationResult, title: title, body: firstLocationResult.distance.distanceString(), identifier: "nearbySupermarket", interval: 2)
-                    self.addAnnotation(coordinate: firstLocationResult.locationCoordinate(), title: title)
+                    completion(firstLocationResult)
                 }
             } else {
               print("No Results")
@@ -145,20 +177,20 @@ extension ViewController: CLLocationManagerDelegate {
         content.body = "Here"
         content.categoryIdentifier = "visitWithMap"
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.1, repeats: false)
-        let request = UNNotificationRequest(identifier: "visitDetected", content: content, trigger: trigger)
+        let request = UNNotificationRequest(identifier: NSDate().description, content: content, trigger: trigger)
         UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
     }
     
-    func sendVisitNotification(location:LocationResult, title:String, body:String, identifier:String, interval:TimeInterval) {
+    func sendVisitNotification(visit:Visit, identifier:String, interval:TimeInterval) {
         let content = UNMutableNotificationContent()
-        content.title = title
-        content.body = body
+        content.title = visit.title
+        content.body = visit.distance.distanceString()
         content.categoryIdentifier = "visitWithMap"
-        content.userInfo = ["latitude":location.latitude, "longitude":location.longitude]
+        content.userInfo = ["latitude":visit.latitude, "longitude":visit.longitude]
         
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false)
     
-        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+        let request = UNNotificationRequest(identifier: NSDate().description, content: content, trigger: trigger)
         UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
     }
     
